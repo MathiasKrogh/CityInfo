@@ -1,12 +1,35 @@
+using CityInfo.API.Services;
+using CityInfo.API;
 using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/cityinfo.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+//builder.Logging.ClearProviders();
+//builder.Logging.AddConsole();
+builder.Host.UseSerilog();
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// 3 different ways to add your own services: Transient, Scoped, Singleton.
+// Transient is used for lightweight stateless services.
+// Scoped is used for services that are created once per request.
+// Singleton is used for services that are created once and shared throughout the application.
+#if DEBUG
+builder.Services.AddTransient<IMailService, LocalMailService>();
+#else
+builder.Services.AddTransient<IMailService, CloudMailService>();
+#endif
+builder.Services.AddSingleton<CitiesDataStore>();
 
 // Adds exceptions for formats
 builder.Services.AddControllers(options =>
@@ -19,14 +42,15 @@ builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
 
 
 // Can add extra information for error codes
-builder.Services.AddProblemDetails(options =>
-{
-    options.CustomizeProblemDetails = ctx =>
-    {
-        ctx.ProblemDetails.Extensions.Add("AdditionalInfo", "This is additional information for the problem details.");
-        ctx.ProblemDetails.Extensions.Add("Server", Environment.MachineName);
-    };
-});
+builder.Services.AddProblemDetails();
+//builder.Services.AddProblemDetails(options =>
+//{
+//    options.CustomizeProblemDetails = ctx =>
+//    {
+//        ctx.ProblemDetails.Extensions.Add("AdditionalInfo", "This is additional information for the problem details.");
+//        ctx.ProblemDetails.Extensions.Add("Server", Environment.MachineName);
+//    };
+//});
 
 var app = builder.Build();
 
@@ -34,6 +58,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+} 
+else // When in production
+{
+    app.UseExceptionHandler();
 }
 
 app.UseHttpsRedirection();
