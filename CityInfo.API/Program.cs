@@ -2,6 +2,8 @@ using CityInfo.API.Services;
 using CityInfo.API;
 using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
+using CityInfo.API.DbContexts;
+using Microsoft.EntityFrameworkCore;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -30,6 +32,15 @@ builder.Services.AddTransient<IMailService, LocalMailService>();
 builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 builder.Services.AddSingleton<CitiesDataStore>();
+
+// You can use an environment variable to set the connection string for the database. This is useful for production environments
+// where you don't want to store sensitive information in your code or configuration files.
+// You can set the environment variable in your hosting environment, and then retrieve it in your application using the Configuration API.
+
+// Azure Key Vault is an even better way to store sensitive information like connection strings, as it provides additional security features such as encryption and access control.
+// You can configure your application to retrieve the connection string from Azure Key Vault using the Azure SDK for .NET.
+// This way, you can keep your connection strings secure and separate from your application code and configuration files.
+builder.Services.AddDbContext<CityInfoContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:CityInfoDBConnectionString"]));
 
 // Adds exceptions for formats
 builder.Services.AddControllers(options =>
