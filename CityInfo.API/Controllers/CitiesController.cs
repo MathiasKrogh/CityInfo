@@ -9,7 +9,7 @@ using Asp.Versioning;
 namespace CityInfo.API.Controllers
 {
     [ApiController]
-     [Authorize]
+    [Authorize]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion(1)]
     [ApiVersion(2)]
