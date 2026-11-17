@@ -50,7 +50,7 @@ namespace CityInfo.API.Controllers
                 return BadRequest("No file or an invalid one was inputted.");
             }
             // Only for demo purpose
-            var path = Path.Combine(Directory.GetCurrentDirectory(), $"uploaded_file_{Guid.NewGuid}.pdf");
+            var path = Path.Combine(Directory.GetCurrentDirectory(), $"uploaded_file_{Guid.NewGuid()}.pdf");
             using (var stream = new FileStream(path, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
